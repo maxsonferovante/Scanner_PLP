@@ -1,42 +1,55 @@
 import re
 
-from extracting_lexemas import Extractor
+tokens_reserved = {"return":"RESERVED_RETURN",
+                   "int":"TYPE_NUMERAL",
+                   "{":"STARTING_BLOCK",
+                   "}":"END_BLOCK",
+                   ";":"END_LINE",
+                   "=":"ASSIGNMENT",
+                   "main()":"RESERVED_FUNCTION_MAIN"}
 
-
-def tokens_ident(lexeme):
-    if tokens_reserved.has_key(lexeme):
-        return  False
-    elif re.findall(re.compile(ex.TYPE_STRING),lexeme):
+def munber_integer(text):
+    if re.findall(re.compile("[1-9][0-9]*"),text):
         return True
+    return False
 
-    return  False
+def identifying_variables(text):
+    if re.findall(re.compile("[a-zA-Z][_a-zA-Z0-9]*"),text):
+        return True
+    return False
 
-def tokens_numeral_int(lexeme):
-    if re.findall(re.compile(ex.TYPE_INT_NUMERAL),lexeme):
-        return  True
-    return  False
+def reserved_include(text):
+    if re.findall(re.compile("[#][i][n][c][l][u][d][e][<][a-zA-z]*[.][a-zA-z]*[>]"),text):
+        return True
+    return False
 
-myCode = open("myCode.txt").readlines()
+def main():
+    myCode = open("myCode.txt").read().split()
 
-tokens_reserved = {'main':'RESERVED',
-                   'return':'RESERVED',
-                   'include':'RESERVED',
-                   'stdio':'RESERVED'
-                   }
-tokens_assing = {'=': 'ASSIGN_OP'}
-tokens_type_numeral = {'int': 'TYPE','float':'TYPE'}
-tokens_end_line = {';': 'END_LINE'}
+    for i in range(0,len( myCode)):
+        if ";" in myCode[i] and myCode[i]!=";":
+            myCode[i]= myCode[i][:-1]
+            myCode.insert(i+1,";")
 
-ex = Extractor()
+    resultado = []
+    for i in range(0,len(myCode)):
+        if tokens_reserved.has_key(myCode[i]):
+            resultado.append((tokens_reserved[myCode[i]],myCode[i]))
 
-for line in range(0,len(myCode)):
-    lexemes = ex.extracting_lexames(myCode[line])
-    if lexemes:
-        ## int var = 10;
-        ind = 0
-        while  ind<len(lexemes):
-            ##if tokens_type_numeral.has_key(lexemes[ind]) and ind + 1 < len(lexemes) and tokens_ident(lexemes[ind +1]):
-            ##    print "O token ",lexemes[ind]," esta associado a ", lexemes[ind+1]
-            if tokens_ident(lexemes[ind]) and ind + 2 < len(lexemes) and tokens_numeral_int(lexemes[ind+2]):
-                print "O token ", lexemes[ind], " esta associado a ", lexemes[ind + 2]
-            ind +=1
+        elif munber_integer(myCode[i]):
+            resultado.append(("NUMBER_INTEGER",myCode[i]))
+
+        elif identifying_variables(myCode[i]):
+            resultado.append(("IDENTIFYINF_VARIABLES",myCode[i]))
+
+        elif reserved_include(myCode[i]):
+            resultado.append(("RESERVED_INCLUDE",myCode[i]))
+        else:
+            resultado.append(("LEXEME_UNKNOWN", myCode[i]))
+
+    for token, lexeme in resultado:
+        print token," : ",lexeme
+
+main()
+
+
